@@ -142,6 +142,9 @@ public:
         textBrowser = new QTextBrowser(centralwidget);
         textBrowser->setObjectName(QString::fromUtf8("textBrowser"));
         textBrowser->setGeometry(QRect(1060, 800, 471, 61));
+        QFont font;
+        font.setPointSize(12);
+        textBrowser->setFont(font);
         textBrowser->setStyleSheet(QString::fromUtf8("background-color: rgb(0, 0, 0);\n"
 "color: rgb(0, 255, 0);"));
         videoWidget = new QVideoWidget(centralwidget);
@@ -173,8 +176,8 @@ public:
         headingLayout->setContentsMargins(0, 0, 0, 0);
         Submarine->setCentralWidget(centralwidget);
         videoWidget->raise();
-        layoutWidget1->raise();
-        layoutWidget1->raise();
+        layoutWidget->raise();
+        layoutWidget->raise();
         infobutton->raise();
         horizontalLayoutWidget->raise();
         horizontalLayoutWidget_2->raise();

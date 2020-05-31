@@ -12,10 +12,16 @@
 #include <qcgaugewidget.h>
 #include <QVideoWidget>
 #include <QMediaPlayer>
+#include <QTimer>
+#include <cstring>
+#include <iostream>
+
+using namespace std;
 
 
 QSerialPort comm;                                           //declaration of object for the class Serial Port
 QSerialPort *atmega328p=&comm;
+QTimer *updateValue;
 Submarine::Submarine(QWidget *parent): QMainWindow(parent), ui(new Ui::Submarine) // constructor
 
 {
@@ -40,13 +46,16 @@ Submarine::Submarine(QWidget *parent): QMainWindow(parent), ui(new Ui::Submarine
 
 
      atmega328p->setPortName("COM3");
-     atmega328p->setBaudRate(QSerialPort::Baud9600);
+     atmega328p->setBaudRate(QSerialPort::Baud115200);
      atmega328p->setDataBits(QSerialPort::Data8);
      atmega328p->setParity(QSerialPort::NoParity);
      atmega328p->setStopBits(QSerialPort::OneStop);
      atmega328p->setFlowControl(QSerialPort::NoFlowControl);
      atmega328p->open(QIODevice::ReadWrite);
      QObject::connect(atmega328p, SIGNAL(readyRead()), this, SLOT(readSerial()));
+     atmega328p->clear();
+     //connect(updateValue,SIGNAL(&QTimer::timeout()),this,SLOT(readSerial()));
+     //updateValue->start();
 
 //*****************************************ATMEGA328P QSerial END***********************************
 
@@ -308,28 +317,41 @@ void Submarine::readSerial()
 {
     QTextStream stream(stdout);                          //constructor
     //stream<<atmega328p->readAll();
-    atmega328p->write("RR");
-    int i = 0;
+    stream<<"Reading COM3...\n";
+    if(atmega328p->write("R"))stream<<"Ready Read";
 
-    QByteArray raw = atmega328p->readAll();
-
-    valueStr = valueStr + QString::fromStdString(raw.toStdString());
-    if(bufferSplit.length()<100)
-    bufferSplit << QString::fromStdString(raw.toStdString()).split(",");
-    if(bufferSplit.length()>99);
-    qDebug()<<bufferSplit;
-    //i = bufferSplit.last();
-
+    QByteArray raw = atmega328p->readLine(); //atmega328p is our serial ref. object
+    valueStr = valueStr + QString::fromStdString(raw.toStdString()); //readAll() return QByteArray type. Hence must convert to string first to store
+    //if(bufferLine.length()<100)
+    bufferLine << QString::fromStdString(raw.toStdString()).split("\n");//Spliting the string into a string list to evaluate.
+    while(i<bufferLine.length()){bufferSplit << bufferLine[i].split(","); i++;}
+    //if(bufferSplit.length()>99)bufferSplit.clear(); //was gonna do something, kinda forgot later.
+    qDebug()<<bufferSplit; //simple output
 
 
-    Needle0->setCurrentValue(bufferSplit[40].toFloat());//bufferSplit[bufferSplit.last()].toFloat());
-    Needle1->setCurrentValue(bufferSplit[0].toFloat());
-    Needle2->setCurrentValue(bufferSplit[0].toFloat());
-    Needle3->setCurrentValue(bufferSplit[0].toFloat());
-    Needle4->setCurrentValue(bufferSplit[0].toFloat());
-    Needle5->setCurrentValue(bufferSplit[0].toFloat());
+
+    if(bufferSplit.length()>6){
+
+        rpm = bufferSplit[(bufferSplit.length()-3)].toFloat();
+        current = bufferSplit[(bufferSplit.length()-4)].toFloat();
+        voltage = bufferSplit[(bufferSplit.length()-5)].toFloat();
+        speed = bufferSplit[(bufferSplit.length()-6)].toFloat();
+        pump = bufferSplit[(bufferSplit.length()-7)].toFloat();
+        heading = bufferSplit[(bufferSplit.length()-8)].toFloat();
+
+
+    Needle0->setCurrentValue(rpm);//bufferSplit[bufferSplit.last()].toFloat()); //various gauge needle values
+    Needle1->setCurrentValue(current);
+    Needle2->setCurrentValue(voltage);
+    Needle3->setCurrentValue(speed);
+    Needle4->setCurrentValue(pump);
+    Needle5->setCurrentValue(heading);
+    }
+    ui->textBrowser->clear();
+    ui->textBrowser->insertPlainText("RAW VALUES RECIEVED THIS CYCLE: ");
     ui->textBrowser->insertPlainText(raw);
-    //ui->textBrowser->clear(); }
+
+    //updateValue->start(1000);
 
 
 }

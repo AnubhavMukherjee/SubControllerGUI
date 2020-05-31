@@ -6,6 +6,11 @@
 #include <qcgaugewidget.h>
 #include <QVideoWidget>
 #include <QMediaPlayer>
+#include <QTimer>
+#include <cstring>
+#include <iostream>
+
+using namespace std;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Submarine; }
@@ -64,6 +69,8 @@ private:
     QMediaPlaylist *playlist;
     QVideoWidget *video;
     QByteArray raw;
+    float i = 0, rpm = 0, current = 0, voltage = 0, speed = 0, pump = 0, heading = 0;
+    string a ="LOL";
 
 
 };
